@@ -1,6 +1,7 @@
-package com.shebele.wallet.service;
+package com.shebele.wallet.service.impl;
 import com.shebele.wallet.domain.Account;
 import com.shebele.wallet.repository.AccountRepository;
+import com.shebele.wallet.service.api.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AccountService {
+public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
 

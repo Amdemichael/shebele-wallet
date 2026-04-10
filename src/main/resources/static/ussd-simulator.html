@@ -1,205 +1,459 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>USSD Simulator - Shebele Wallet</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Shebele Wallet - USSD Simulator (*889#)</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
-            background: #1a1a2e;
-            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Courier New', 'Segoe UI', monospace;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-        }
-
-        .phone {
-            width: 380px;
-            background: #000;
-            border-radius: 40px;
             padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
+        /* Phone Frame */
+        .phone {
+            width: 400px;
+            max-width: 100%;
+            background: #000;
+            border-radius: 50px;
+            padding: 20px 15px 25px 15px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        /* Phone Top Speaker */
+        .phone::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 25px;
+            background: #1a1a1a;
+            border-radius: 20px;
+        }
+
+        /* Screen */
         .screen {
             background: #0a0a0a;
-            border-radius: 30px;
-            padding: 20px;
-            min-height: 500px;
+            border-radius: 40px;
+            padding: 25px 20px;
+            min-height: 550px;
             display: flex;
             flex-direction: column;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.1);
         }
 
+        /* Display Area */
         .display {
-            background: #0f0f0f;
-            color: #0f0;
+            background: #0c0c0c;
+            color: #00ff00;
             padding: 20px;
-            border-radius: 15px;
-            min-height: 350px;
+            border-radius: 20px;
+            min-height: 380px;
             white-space: pre-line;
             font-size: 16px;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             margin-bottom: 20px;
-            border: 1px solid #0f0;
+            border: 1px solid #00ff00;
+            box-shadow: inset 0 0 15px rgba(0,255,0,0.05);
+            overflow-y: auto;
+            line-height: 1.6;
+            font-weight: 500;
+            text-shadow: 0 0 2px #00ff00;
         }
 
+        /* Keypad */
         .keypad {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
+        }
+
+        .input-area {
+            margin-bottom: 5px;
         }
 
         input {
             background: #1a1a1a;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 15px;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 14px;
             font-size: 18px;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             text-align: center;
-            border-radius: 10px;
+            border-radius: 15px;
+            width: 100%;
+            letter-spacing: 1px;
         }
 
         input:focus {
             outline: none;
-            background: #0a0a0a;
+            background: #0a2a0a;
+            box-shadow: 0 0 10px rgba(0,255,0,0.3);
         }
 
-        .status {
-            color: #666;
-            font-size: 12px;
-            margin-top: 10px;
-            text-align: center;
+        input:disabled {
+            background: #1a1a1a;
+            color: #006600;
+            border-color: #006600;
         }
 
         .button-row {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            justify-content: center;
         }
 
         button {
             flex: 1;
             background: #1a1a1a;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 10px;
-            border-radius: 10px;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 14px 0;
+            border-radius: 20px;
             cursor: pointer;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            text-align: center;
         }
 
         button:hover {
-            background: #0a0a0a;
+            background: #00aa00;
+            color: #000;
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
         }
 
-        h1 {
-            color: #0f0;
-            text-align: center;
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .clear-btn {
+            background: #330000;
+            border-color: #ff0000;
+            color: #ff4444;
+        }
+
+        .clear-btn:hover {
+            background: #550000;
+            color: #ff8888;
+        }
+
+        .send-btn {
+            background: #003300;
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .send-btn:hover {
+            background: #00aa00;
+            color: #000;
+        }
+
+        .refresh-btn {
+            background: #1a1a2e;
+            border-color: #ffaa00;
+            color: #ffaa00;
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-top: 5px;
+        }
+
+        .refresh-btn:hover {
+            background: #ffaa00;
+            color: #1a1a2e;
+        }
+
+        .status {
+            color: #666;
+            font-size: 11px;
+            margin-top: 12px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .status.error {
+            color: #ff4444;
+        }
+
+        .status.success {
+            color: #00ff00;
+        }
+
+        .status.warning {
+            color: #ffaa00;
+        }
+
+        /* Scrollbar Styling */
+        .display::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .display::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .display::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 3px;
+        }
+
+        /* Loading Animation */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .loading {
+            animation: blink 1s infinite;
         }
     </style>
 </head>
 <body>
 <div class="phone">
-    <h1>📱 Shebele Wallet USSD Simulator</h1>
     <div class="screen">
-        <div class="display" id="display">Loading...</div>
-        <div class="keypad">
-            <input type="text" id="input" placeholder="Type here..." autofocus>
-            <div class="button-row">
-                <button onclick="sendInput('1')">1</button>
-                <button onclick="sendInput('2')">2</button>
-                <button onclick="sendInput('3')">3</button>
-            </div>
-            <div class="button-row">
-                <button onclick="sendInput('4')">4</button>
-                <button onclick="sendInput('5')">5</button>
-                <button onclick="sendInput('6')">6</button>
-            </div>
-            <div class="button-row">
-                <button onclick="sendInput('7')">7</button>
-                <button onclick="sendInput('8')">8</button>
-                <button onclick="sendInput('9')">9</button>
-            </div>
-            <div class="button-row">
-                <button onclick="sendInput('0')">0</button>
-                <button onclick="sendInput('')" style="background:#330000">Clear</button>
-                <button onclick="send()">Send</button>
-            </div>
+        <div class="display" id="display">
+            <span class="loading">⟳</span> Connecting...
         </div>
-        <div class="status" id="status">Session active</div>
+        <div class="keypad">
+            <div class="input-area">
+                <input type="text" id="input" placeholder="Type here..." autofocus>
+            </div>
+            <div class="button-row">
+                <button onclick="pressKey('1')">1</button>
+                <button onclick="pressKey('2')">2</button>
+                <button onclick="pressKey('3')">3</button>
+            </div>
+            <div class="button-row">
+                <button onclick="pressKey('4')">4</button>
+                <button onclick="pressKey('5')">5</button>
+                <button onclick="pressKey('6')">6</button>
+            </div>
+            <div class="button-row">
+                <button onclick="pressKey('7')">7</button>
+                <button onclick="pressKey('8')">8</button>
+                <button onclick="pressKey('9')">9</button>
+            </div>
+            <div class="button-row">
+                <button class="clear-btn" onclick="clearInput()">CLEAR</button>
+                <button onclick="pressKey('0')">0</button>
+                <button class="send-btn" onclick="sendRequest()">SEND</button>
+            </div>
+            <button class="refresh-btn" onclick="refreshSession()">🔄 NEW SESSION</button>
+        </div>
+        <div class="status" id="status">● Session active | Dial *889#</div>
     </div>
 </div>
 
 <script>
+    // Session Management
     let sessionId = localStorage.getItem('ussd_session');
+    let currentInput = '';
+    let isProcessing = false;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+
+    // Initialize session
     if (!sessionId) {
-        sessionId = 'SESS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionId = generateSessionId();
         localStorage.setItem('ussd_session', sessionId);
     }
 
-    let currentInput = '';
-
-    function sendInput(value) {
-        if (value === '') {
-            currentInput = '';
-            document.getElementById('input').value = '';
-            return;
-        }
-        currentInput += value;
-        document.getElementById('input').value = currentInput;
+    function generateSessionId() {
+        return 'SESS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-    async function send() {
+    // Input Management
+    function pressKey(value) {
+        if (document.getElementById('input').disabled) return;
+        currentInput += value;
+        document.getElementById('input').value = currentInput;
+        document.getElementById('input').focus();
+    }
+
+    function clearInput() {
+        currentInput = '';
+        document.getElementById('input').value = '';
+        document.getElementById('input').focus();
+    }
+
+    function refreshSession() {
+        sessionId = generateSessionId();
+        localStorage.setItem('ussd_session', sessionId);
+        currentInput = '';
+        document.getElementById('input').value = '';
+        document.getElementById('input').disabled = false;
+        document.getElementById('status').className = 'status';
+        document.getElementById('status').innerHTML = '● Session active | Dial *889#';
+        document.getElementById('display').innerHTML = 'Starting new session...';
+        retryCount = 0;
+        sendRequest(true); // Silent initialization
+    }
+
+    // Main USSD Request
+    async function sendRequest(isSilent = false) {
+        if (isProcessing) {
+            if (!isSilent) {
+                setStatus('Please wait...', 'warning');
+            }
+            return;
+        }
+
         const input = currentInput;
         currentInput = '';
         document.getElementById('input').value = '';
-        document.getElementById('status').innerText = 'Sending...';
+        isProcessing = true;
+
+        if (!isSilent) {
+            setStatus('📡 Sending request...', 'warning');
+        }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
             const response = await fetch('/api/ussd/callback', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({
                     sessionId: sessionId,
                     msisdn: '251911111111',
                     userInput: input,
                     serviceCode: '*889#'
-                })
+                }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
-            document.getElementById('display').innerText = data.message;
+            displayMessage(data.message);
 
             if (data.endSession) {
-                document.getElementById('status').innerText = 'Session ended. Refresh to start new session.';
+                setStatus('✅ Session ended | Click "NEW SESSION" to start over', 'success');
                 document.getElementById('input').disabled = true;
+                retryCount = 0;
             } else {
-                document.getElementById('status').innerText = 'Session active - waiting for input...';
+                setStatus('● Session active | Waiting for input...', '');
                 document.getElementById('input').disabled = false;
                 document.getElementById('input').focus();
+                retryCount = 0;
             }
+
         } catch (error) {
-            document.getElementById('display').innerText = 'Error connecting to server.\nMake sure the backend is running.';
-            document.getElementById('status').innerText = 'Connection error';
+            console.error('USSD Error:', error);
+
+            let errorMessage = '⚠️ CONNECTION ERROR\n\n';
+
+            if (error.name === 'AbortError') {
+                errorMessage += 'Request timeout.\nThe server took too long to respond.';
+            } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMessage += 'Cannot connect to server.\n\n';
+                errorMessage += 'Make sure the backend is running:\n';
+                errorMessage += '▶ ./mvnw spring-boot:run\n\n';
+                errorMessage += 'Server should be on: http://localhost:8080';
+            } else if (error.message.includes('404')) {
+                errorMessage += 'Endpoint not found (404).\n\n';
+                errorMessage += 'Expected: POST /api/ussd/callback\n';
+                errorMessage += 'Check if USSDController is properly mapped.';
+            } else if (error.message.includes('500')) {
+                errorMessage += 'Server error (500).\n\n';
+                errorMessage += 'Check the backend console for stack trace.';
+            } else {
+                errorMessage += error.message;
+            }
+
+            displayMessage(errorMessage);
+            setStatus('❌ Connection error - Check backend', 'error');
+            document.getElementById('input').disabled = false;
+
+            // Auto retry for network errors
+            if (retryCount < MAX_RETRIES && error.message.includes('Failed to fetch')) {
+                retryCount++;
+                setStatus(`🔄 Retrying... (${retryCount}/${MAX_RETRIES})`, 'warning');
+                setTimeout(() => {
+                    currentInput = input;
+                    sendRequest(isSilent);
+                }, 2000);
+            }
+        } finally {
+            isProcessing = false;
         }
     }
 
+    // UI Helpers
+    function displayMessage(message) {
+        const display = document.getElementById('display');
+        display.innerHTML = message.replace(/\n/g, '<br>');
+    }
+
+    function setStatus(message, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = message;
+        statusDiv.className = 'status ' + type;
+    }
+
+    // Keyboard Support
     document.getElementById('input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            send();
+            sendRequest();
+        }
+    });
+
+    // Number pad support for physical keyboard
+    document.addEventListener('keydown', function(e) {
+        if (document.activeElement === document.getElementById('input')) return;
+
+        const key = e.key;
+        if (/^[0-9]$/.test(key)) {
+            e.preventDefault();
+            pressKey(key);
+        } else if (key === 'Enter') {
+            e.preventDefault();
+            sendRequest();
+        } else if (key === 'Delete' || key === 'Escape') {
+            e.preventDefault();
+            clearInput();
+        }
+    });
+
+    // Auto-refresh on visibility change (prevents stale sessions)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && !document.getElementById('input').disabled) {
+            // Session might be stale, send a ping
+            setTimeout(() => {
+                if (document.getElementById('display').innerHTML.includes('Session ended')) {
+                    refreshSession();
+                }
+            }, 500);
         }
     });
 
     // Initialize
-    send();
+    sendRequest(true);
 </script>
 </body>
 </html>

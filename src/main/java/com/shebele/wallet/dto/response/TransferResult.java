@@ -1,8 +1,12 @@
-package com.shebele.wallet.service;
+package com.shebele.wallet.dto.response;
 
 import com.shebele.wallet.domain.Transaction;
 import lombok.Getter;
 
+/**
+ * Transfer result wrapper - returned by TransferService.
+ * Contains either success result or error information.
+ */
 @Getter
 public class TransferResult {
     private final boolean success;

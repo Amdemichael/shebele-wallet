@@ -1,9 +1,9 @@
 package com.shebele.wallet.domain;
 
+import com.shebele.wallet.enums.AccountStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -26,7 +26,7 @@ public class Account {
     @Column(nullable = false)
     private String fullName;
 
-    @Column(nullable = false, precision = 19, scale=2)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
     @Version
@@ -35,19 +35,14 @@ public class Account {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountStatus status = AccountStatus.ACTIVE;
 
     @PreUpdate
-    protected void onUpdate(){
-        updateAt = LocalDateTime.now();
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
-
-    public enum AccountStatus{
-        ACTIVE,SUSPENDED,CLOSED,FROZEN
-    }
-
 }
