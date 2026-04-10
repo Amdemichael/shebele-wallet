@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shebele_wallet
+    username: postgres
+    password: Mire#123  # Change this to YOUR PostgreSQL password!
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.shebele: DEBUG
+    org.hibernate.SQL: DEBUG
