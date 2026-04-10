@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>USSD Simulator - Shebele Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone {
+            width: 380px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .screen {
+            background: #0a0a0a;
+            border-radius: 30px;
+            padding: 20px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .display {
+            background: #0f0f0f;
+            color: #0f0;
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 350px;
+            white-space: pre-line;
+            font-size: 16px;
+            font-family: monospace;
+            margin-bottom: 20px;
+            border: 1px solid #0f0;
+        }
+
+        .keypad {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input {
+            background: #1a1a1a;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 15px;
+            font-size: 18px;
+            font-family: monospace;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        input:focus {
+            outline: none;
+            background: #0a0a0a;
+        }
+
+        .status {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            background: #1a1a1a;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+
+        button:hover {
+            background: #0a0a0a;
+        }
+
+        h1 {
+            color: #0f0;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="phone">
+    <h1>📱 Shebele Wallet USSD Simulator</h1>
+    <div class="screen">
+        <div class="display" id="display">Loading...</div>
+        <div class="keypad">
+            <input type="text" id="input" placeholder="Type here..." autofocus>
+            <div class="button-row">
+                <button onclick="sendInput('1')">1</button>
+                <button onclick="sendInput('2')">2</button>
+                <button onclick="sendInput('3')">3</button>
+            </div>
+            <div class="button-row">
+                <button onclick="sendInput('4')">4</button>
+                <button onclick="sendInput('5')">5</button>
+                <button onclick="sendInput('6')">6</button>
+            </div>
+            <div class="button-row">
+                <button onclick="sendInput('7')">7</button>
+                <button onclick="sendInput('8')">8</button>
+                <button onclick="sendInput('9')">9</button>
+            </div>
+            <div class="button-row">
+                <button onclick="sendInput('0')">0</button>
+                <button onclick="sendInput('')" style="background:#330000">Clear</button>
+                <button onclick="send()">Send</button>
+            </div>
+        </div>
+        <div class="status" id="status">Session active</div>
+    </div>
+</div>
+
+<script>
+    let sessionId = localStorage.getItem('ussd_session');
+    if (!sessionId) {
+        sessionId = 'SESS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('ussd_session', sessionId);
+    }
+
+    let currentInput = '';
+
+    function sendInput(value) {
+        if (value === '') {
+            currentInput = '';
+            document.getElementById('input').value = '';
+            return;
+        }
+        currentInput += value;
+        document.getElementById('input').value = currentInput;
+    }
+
+    async function send() {
+        const input = currentInput;
+        currentInput = '';
+        document.getElementById('input').value = '';
+        document.getElementById('status').innerText = 'Sending...';
+
+        try {
+            const response = await fetch('/api/ussd/callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    msisdn: '251911111111',
+                    userInput: input,
+                    serviceCode: '*889#'
+                })
+            });
+
+            const data = await response.json();
+            document.getElementById('display').innerText = data.message;
+
+            if (data.endSession) {
+                document.getElementById('status').innerText = 'Session ended. Refresh to start new session.';
+                document.getElementById('input').disabled = true;
+            } else {
+                document.getElementById('status').innerText = 'Session active - waiting for input...';
+                document.getElementById('input').disabled = false;
+                document.getElementById('input').focus();
+            }
+        } catch (error) {
+            document.getElementById('display').innerText = 'Error connecting to server.\nMake sure the backend is running.';
+            document.getElementById('status').innerText = 'Connection error';
+        }
+    }
+
+    document.getElementById('input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            send();
+        }
+    });
+
+    // Initialize
+    send();
+</script>
+</body>
+</html>
