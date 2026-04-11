@@ -1,15 +1,16 @@
 package com.shebele.wallet.controller;
 
 import com.shebele.wallet.domain.Transaction;
-import com.shebele.wallet.service.TransferService;
-import com.shebele.wallet.service.TransferResult;
+import com.shebele.wallet.dto.request.TransferRequest;
+import com.shebele.wallet.dto.response.TransferResponse;
+import com.shebele.wallet.dto.response.TransferResult;
+import com.shebele.wallet.service.api.TransferService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.math.BigDecimal;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,14 +29,13 @@ public class TransferController {
 
         TransferResult result = transferService.transfer(
                 idempotencyKey,
-                request.fromMsisdn,
-                request.toMsisdn,
-                request.amount,
-                request.description
+                request.getFromMsisdn(),
+                request.getToMsisdn(),
+                request.getAmount(),
+                request.getDescription()
         );
 
         if (result.isDuplicate()) {
-            // Return 409 Conflict for duplicate requests
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of(
                             "status", "DUPLICATE",
@@ -54,14 +54,16 @@ public class TransferController {
         }
 
         Transaction transaction = result.getTransaction();
-        return ResponseEntity.ok(Map.of(
-                "status", "SUCCESS",
-                "transactionRef", transaction.getTransactionRef(),
-                "fromAccount", transaction.getFromMsisdn(),
-                "toAccount", transaction.getToMsisdn(),
-                "amount", transaction.getAmount(),
-                "timestamp", transaction.getCreatedAt()
-        ));
+        TransferResponse response = TransferResponse.builder()
+                .transactionRef(transaction.getTransactionRef())
+                .status(transaction.getStatus().name())
+                .amount(transaction.getAmount())
+                .fromAccount(transaction.getFromMsisdn())
+                .toAccount(transaction.getToMsisdn())
+                .timestamp(transaction.getCreatedAt())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/history/{msisdn}")
@@ -87,18 +89,4 @@ public class TransferController {
                 "count", history.size()
         ));
     }
-}
-
-class TransferRequest {
-    @NotBlank @Pattern(regexp = "251[0-9]{9}")
-    public String fromMsisdn;
-
-    @NotBlank @Pattern(regexp = "251[0-9]{9}")
-    public String toMsisdn;
-
-    @NotNull @Positive
-    public BigDecimal amount;
-
-    @Size(max = 255)
-    public String description;
 }

@@ -1,7 +1,13 @@
-package com.shebele.wallet.service;
+package com.shebele.wallet.service.impl;
 
 import com.shebele.wallet.domain.Transaction;
+import com.shebele.wallet.dto.response.TransferResult;
+import com.shebele.wallet.enums.ChannelType;
+import com.shebele.wallet.enums.TransactionStatus;
+import com.shebele.wallet.helper.AmountHelper;
+import com.shebele.wallet.helper.TransactionReferenceHelper;
 import com.shebele.wallet.repository.TransactionRepository;
+import com.shebele.wallet.service.api.TransferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,10 +20,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TransferService {
+public class TransferServiceImpl implements TransferService {
 
-    private final AccountService accountService;
+    private final AccountServiceImpl accountService;
     private final TransactionRepository transactionRepository;
+    private final AmountHelper amountHelper;  // Inject helper
+    private final TransactionReferenceHelper referenceHelper;  // Inject helper
 
     @Transactional(rollbackFor = Exception.class)
     public TransferResult transfer(String idempotencyKey, String fromMsisdn,
@@ -33,8 +41,11 @@ public class TransferService {
         }
 
         // 2. Validate amount
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Amount must be positive");
+        if (!amountHelper.isValidAmount(amount)) {
+            return TransferResult.failed(
+                    "Amount must be between " + amountHelper.getMinimumTransfer() +
+                            " and " + amountHelper.getMaximumTransfer() + " Birr"
+            );
         }
 
         // 3. Validate not same account
@@ -54,7 +65,7 @@ public class TransferService {
         accountService.updateBalance(toMsisdn, amount, true);     // Credit receiver
 
         // 6. Record transaction
-        String transactionRef = generateTransactionRef();
+        String transactionRef = referenceHelper.generateReference();
         Transaction transaction = Transaction.builder()
                 .transactionRef(transactionRef)
                 .idempotencyKey(idempotencyKey)
@@ -62,7 +73,8 @@ public class TransferService {
                 .toMsisdn(toMsisdn)
                 .amount(amount)
                 .description(description)
-                .status(Transaction.TransactionStatus.COMPLETED)
+                .status(TransactionStatus.COMPLETED)  // ← FIXED: Use enum directly
+                .channelType(ChannelType.API)          // ← Added channel type
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -79,7 +91,4 @@ public class TransferService {
         return transactionRepository.findTransactionsForUserSince(msisdn, fromDate);
     }
 
-    private String generateTransactionRef() {
-        return "TXN" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 4);
-    }
 }
